@@ -1,0 +1,108 @@
+<html>
+
+<head>
+  <title>Strava Auto Kudo</title>
+  <style type="text/css">
+    html {
+      height: fit-content;
+    }
+
+    body {
+      font-family: Tahoma;
+      height: fit-content;
+      background-color: cornsilk;
+    }
+
+    h1 {
+      white-space: nowrap;
+    }
+
+    input,
+    select {
+      font-size: 18px;
+    }
+
+    button {
+      font-size: x-large;
+      cursor: pointer;
+      width: 100%;
+      background-color: orangered;
+      color: white;
+      border-radius: 5px;
+      border: 2px solid orangered;
+    }
+
+    .opt-container {
+      font-size: large;
+      padding: 5px;
+      white-space: nowrap;
+    }
+
+    .note {
+      white-space: normal;
+      font-size: small;
+      font-style: italic;
+      background-color: #ffff72;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .pointer {
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <div>
+    <h1>Execution Type</h1>
+    <div class="opt-container">
+      <input class="pointer" type="radio" id="exec_auto" name="exec_type" value="auto">
+      <label class="pointer" for="exec_auto">Automatic (timer auto checks and give kudos)</label>
+    </div>
+    <div class="opt-container">
+      <input class="pointer" type="radio" id="exec_manual" name="exec_type" value="manual">
+      <label class="pointer" for="exec_manual">Manual (by clicking Kudo All button)</label>
+    </div>
+  </div>
+
+  <h1>Options</h1>
+  <div class="opt-container">
+    <label>FEED_SEARCH_DEPTH: <input type="number" min="1" max="15" id="FEED_SEARCH_DEPTH" value="3" /></label>
+    <div class="note">Specifies how many times we should go back in time while searching activity feed. Strava limits 20
+      entry per depth. So If you choose "5", it will get you the most recent 100 (5x20) entries in your feed.</div>
+  </div>
+  <div id="config_auto" class="hidden">
+    <div class="opt-container"><label>AUTO_KUDO_CHECK_MINUTES:
+        <select id="AUTO_KUDO_CHECK_SECS" name="carlist" form="carform">
+          <option value="60">1 minute</option>
+          <option value="180">3 minutes</option>
+          <option value="300">5 minutes</option>
+          <option value="600">10 minutes</option>
+          <option value="900">15 minutes</option>
+          <option value="1200">20 minutes</option>
+          <option value="1800">30 minutes</option>
+          <option value="2400">40 minutes</option>
+          <option value="3600">50 minutes</option>
+          <option value="3600">60 minutes</option>
+        </select>
+      </label>
+      <div class="note">Specifies the feed polling interval duration. If you choose 10min, it will check your
+        feed every 10 minutes automatically.</div>
+    </div>
+    <div class="opt-container"><label>HIDE_KUDO_ALL_BUTTON_WHEN_AUTO: <input type="checkbox"
+          id="HIDE_KUDO_ALL_BUTTON_WHEN_AUTO" /></label>
+      <div class="note">When using auto mode, If you don't want to see "Kudo All" button on Strava Dashboard header,
+        check this box.</div>
+    </div>
+  </div>
+  <div class="opt-container">
+    <button id="save" value="save">Save Configuration</button>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+
+</html>
