@@ -1,6 +1,6 @@
 {
     "name": "Strava Auto Kudo",
-    "description": "Automatically give kudos for followed athletes recent activities. Auto Kudo searches user-feed back in time and looks for non-kudoed activities.",
+    "description": "Auto give kudos for followed athletes recent activities. It searches user-feed back in time and looks for non-kudoed activities.",
     "version": "1.0",
     "author": "cankuteskin@gmail.com",
     "manifest_version": 3,
