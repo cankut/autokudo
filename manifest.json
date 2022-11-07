@@ -31,8 +31,8 @@
         }
     ],
     "icons": {
-        "16": "images/like.png",
-        "48": "images/like.png",
-        "128": "images/like.png"
+        "16": "images/like16.png",
+        "48": "images/like48.png",
+        "128": "images/like128.png"
     }
 }
