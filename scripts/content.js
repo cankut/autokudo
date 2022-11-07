@@ -1,5 +1,5 @@
 var s = document.createElement('script');
-s.src = chrome.runtime.getURL('autokudo.js');
+s.src = chrome.runtime.getURL('scripts/autokudo.js');
 (document.head || document.documentElement).appendChild(s);
 console.log("injected autokudo script...");
 

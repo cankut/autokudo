@@ -10,7 +10,7 @@
     "web_accessible_resources": [
         {
             "resources": [
-                "autokudo.js"
+                "scripts/autokudo.js"
             ],
             "matches": ["<all_urls>"]
         }
