@@ -1,4 +1,27 @@
 
+var ui_timer = (function () {
+
+    var intervalHandle = null
+    var fn = null
+
+    return {
+        start: function (seconds, ontick) {
+            this.stop()
+            fn = ontick
+            intervalHandle = setInterval(fn, seconds * 1000)
+            console.log(`ui timer started.`)
+        },
+        stop: function () {
+            if (intervalHandle) {
+                clearInterval(intervalHandle)
+                console.log(`ui timer stopped. [${intervalHandle}]`)
+                intervalHandle = null
+            }
+        },
+
+    }
+})()
+
 var utils = (function () {
     return {
         /**
@@ -114,6 +137,10 @@ var utils = (function () {
             }
 
             return activities
+        },
+
+        update_progress_ui: function (text) {
+            jQuery("#autokudo_progress_span").text(text)
         }
     }
 })();
@@ -127,16 +154,22 @@ var strava_api = (function (utils) {
          */
         kudo_activity: function (activity) {
 
+            var d = jQuery.Deferred();
+
             var url = `https://www.strava.com/feed/activity/${activity.id}/kudo`;
 
             jQuery.ajax({
                 method: "POST",
                 url: url,
                 success: function (data) {
-                    let emj = String.fromCodePoint(0x1F44D)
-                    console.log(`${emj} kudo given for activity (${activity.id}) by ${activity.athlete} - ${activity.name}`);
+                    d.resolve({ activity_id: activity.id, athlete: activity.athlete, name: activity.name });
+                },
+                error: function (jqXhr, err) {
+                    d.reject(err);
                 }
             });
+
+            return d.promise();
 
         },
 
@@ -155,7 +188,6 @@ var strava_api = (function (utils) {
                 method: "GET",
                 url: url,
                 success: function (data) {
-                    console.log("Fetch executed.");
                     let activities = utils.convert_entries(data.entries)
                     d.resolve(activities);
                 },
@@ -179,8 +211,9 @@ var app = (function (utils, api) {
     }
 
     let interval = null
+    let kudo_in_progress = false
 
-    function get_feed_recursive(cursor, count, data) {
+    function get_feed_recursive(cursor, count, data, onFeedFetch) {
 
         if (data == null) { data = []; }
 
@@ -193,15 +226,41 @@ var app = (function (utils, api) {
         return api.list_feed(cursor).then(function (activities) {
             var min_cursor = utils.find_min_cursor(activities);
             data.push(...activities)
-            return get_feed_recursive(min_cursor, count - 1, data)
+            onFeedFetch(activities)
+            return get_feed_recursive(min_cursor, count - 1, data, onFeedFetch)
         })
     }
 
-    function kudo_activities(activities) {
+    function get_kudo_eligible_activity_count(activities) {
+        let cnt = 0
+        for (let i = 0; i < activities.length; i++) {
+
+            const a = activities[i];
+            let has_kudo = a.has_kudo;
+            let can_kudo = a.can_kudo;
+
+            if (can_kudo && !has_kudo) {
+                cnt++
+            }
+        }
+
+        return cnt
+    }
+
+    function delay(time) {
+        var d = new jQuery.Deferred();
+        setTimeout(function () {
+            d.resolve();
+        }, time);
+
+        return d.promise();
+    }
+
+    function kudo_activities(activities, onKudo) {
 
         const DELAY_BETWEEN_KUDOS_MS = 300
-        let already_kudo = 0
-        let to_give_kudo = 0
+
+        var promises = []
 
         for (let i = 0; i < activities.length; i++) {
 
@@ -213,40 +272,64 @@ var app = (function (utils, api) {
             let can_kudo = a.can_kudo;
             let activity_name = a.name;
 
-            if (has_kudo) {
-                already_kudo++
-            }
-            else if (can_kudo) {
-                to_give_kudo++
-            }
-
-
             let kudo_status = has_kudo ? String.fromCodePoint(0x1F44D) : " --- "
-            console.log(`Activity (${activity_id}) by ${athlete} - ${activity_name} / Kudo Status: ${kudo_status}`)
-            if (can_kudo && !has_kudo) {
-                setTimeout(function () { api.kudo_activity(a) }, i * DELAY_BETWEEN_KUDOS_MS)
-            }
 
+            //console.log(`Activity (${activity_id}) by ${athlete} - ${activity_name} / Kudo Status: ${kudo_status}`)
+
+            if (can_kudo && !has_kudo) {
+                var p = delay(i * DELAY_BETWEEN_KUDOS_MS)
+                    .then(function () {
+                        return api.kudo_activity(a)
+                    }).then(onKudo)
+                promises.push(p)
+            }
         }
 
-        console.log(`Total Activity Count: ${activities.length}`)
-        console.log(`Already Given Kudo Count: ${already_kudo}`)
-        console.log(`To Be Given Kudo Count: ${to_give_kudo}`)
-        console.log("")
+        return Promise.allSettled(promises)
     }
 
     return {
         search_feed_and_give_kudos: function (feed_depth) {
 
+            var d = jQuery.Deferred()
+
+            kudo_in_progress = true
+            utils.update_progress_ui(`Fetching...`)
+
             if (feed_depth == null) { feed_depth = config.FEED_SEARCH_DEPTH; }
             // go back in feed "feed_depth" times
 
-            get_feed_recursive(utils.get_epoch_in_secs(), feed_depth)
+            var fetch_count = 0
+            var onFeedFetch = function (fetched) {
+                fetch_count++
+                console.log(`Fetched (${fetch_count}/${feed_depth}) ${fetched.length} items.`)
+                utils.update_progress_ui(`Fetch (${fetch_count}/${feed_depth})`)
+            }
+
+            var kudo_eligible_activity_count = 0
+            var kudo_count = 0
+            var onKudo = function (response) {
+                kudo_count++
+                let emj = String.fromCodePoint(0x1F44D)
+                console.log(`${emj} kudo given for activity (${response.activity_id}) by ${response.athlete} - ${response.name}`);
+
+                utils.update_progress_ui(`Kudo (${kudo_count}/${kudo_eligible_activity_count})`)
+            }
+
+            get_feed_recursive(utils.get_epoch_in_secs(), feed_depth, null, onFeedFetch)
                 .then(function (activities) {
-                    kudo_activities(activities);
+                    kudo_eligible_activity_count = get_kudo_eligible_activity_count(activities)
+
+                    console.log(`(${kudo_eligible_activity_count}) out of (${activities.length}) activities are eligible for kudo.`)
+
+                    kudo_activities(activities, onKudo).then(function (res) {
+                        console.log(`Kudo activities (${kudo_count}) completed.`)
+                        kudo_in_progress = false
+                        d.resolve()
+                    });
                 })
 
-            return
+            return d.promise()
         },
 
         update_configurations: function (new_config) {
@@ -258,6 +341,8 @@ var app = (function (utils, api) {
                 execution_type_changed = true
                 if (interval) {
                     console.log("stopping autokudo timer.")
+                    ui_timer.stop()
+                    utils.update_progress_ui("")
                     clearInterval(interval)
                 }
             }
@@ -265,17 +350,32 @@ var app = (function (utils, api) {
             jQuery.extend(config, new_config)
 
             if (execution_type_changed && config.AUTO_KUDO_ENABLED) {
+
                 console.log(`starting timer. interval duration = ${config.AUTO_KUDO_CHECK_SECS} seconds.`)
+
+                var total_seconds = config.AUTO_KUDO_CHECK_SECS - 1
+                ui_timer.start(1, function () {
+                    if (!kudo_in_progress) {
+                        var str_time = total_seconds < 3600 ? new Date(total_seconds * 1000).toISOString().substring(14, 19) : new Date(total_seconds * 1000).toISOString().substring(11, 19) 
+                        utils.update_progress_ui(str_time)
+                    }
+                    total_seconds--
+                    if (total_seconds == 0) {
+                        total_seconds = config.AUTO_KUDO_CHECK_SECS
+                    }
+                })
+
                 interval = setInterval(function () {
                     self.search_feed_and_give_kudos()
                 }, config.AUTO_KUDO_CHECK_SECS * 1000)
+
             }
 
             if (config.AUTO_KUDO_ENABLED && config.HIDE_KUDO_ALL_BUTTON_WHEN_AUTO) {
-                jQuery(".autokudo").hide()
+                jQuery("#autokudo_item").hide()
             }
             else {
-                jQuery(".autokudo").show()
+                jQuery("#autokudo_item").show()
             }
 
             console.log(config)
@@ -291,8 +391,15 @@ var app = (function (utils, api) {
 window.addEventListener('load', (event) => {
     console.log('page loaded.');
 
-    let btnKudo = jQuery(`<li class="nav-item autokudo" style="padding-left: 10px;"><span class="experiment btn btn-sm btn-primary">Kudo All!</span></li>`)
-    let btnUpdateSettings = jQuery(`<button id="autokudo_settings" style="display: none;"></button>`)
+    let btnKudo = jQuery(`<li id="autokudo_item" class="nav-item">
+    <span id="autokudo_button" class="experiment btn btn-sm btn-primary">Kudo All!</span>
+    </li>`)
+
+    let progress = jQuery(`<li id="autokudo_progress_item" class="nav-item">
+    <span id="autokudo_progress_span" ></span>
+    </li>`)
+
+    let btnUpdateSettings = jQuery(`<button id="autokudo_settings"></button>`)
 
     btnUpdateSettings.click(function (e) {
         var new_config = e.detail
@@ -300,10 +407,13 @@ window.addEventListener('load', (event) => {
     })
 
     btnKudo.click(function () {
-        app.search_feed_and_give_kudos()
+        app.search_feed_and_give_kudos().then(function(){
+            utils.update_progress_ui("")
+        })
     })
 
     jQuery(".global-nav").append(btnKudo)
+    jQuery(".global-nav").append(progress)
     jQuery(".global-nav").append(btnUpdateSettings)
 
 });

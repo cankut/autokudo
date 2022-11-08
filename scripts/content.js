@@ -1,6 +1,13 @@
 var s = document.createElement('script');
 s.src = chrome.runtime.getURL('scripts/autokudo.js');
 (document.head || document.documentElement).appendChild(s);
+
+var link = document.createElement('link');
+link.rel = "stylesheet"
+link.href = chrome.runtime.getURL('css/autokudo.css');
+
+(document.head || document.documentElement).appendChild(link);
+
 console.log("injected autokudo script...");
 
 var default_config = {

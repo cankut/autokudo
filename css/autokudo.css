@@ -1,0 +1,25 @@
+#autokudo_item {
+    padding-left: 10px;
+}
+
+#autokudo_progress_item {
+    padding-left: 4px;
+}
+
+#autokudo_settings {
+    display: none;
+}
+
+#autokudo_progress_span {
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+    background-color: #ffb997;
+    font-family: MaisonNeue,Segoe UI-MONOSPACE;
+    padding: 2px;
+}
+
+#autokudo_progress_span:empty
+{
+    display:none;
+}
