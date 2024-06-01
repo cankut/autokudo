@@ -33,6 +33,14 @@ var utils = (function () {
         },
 
         /**
+         * Gets current time in epoch milliseconds.
+         * @returns Epoch in milliseconds
+         */
+        get_epoch_in_milliseconds: function () {
+            return Date.now()
+        },
+
+        /**
          * @returns Returns and empty activity object.
          */
         get_default_activity: function () {
@@ -53,7 +61,7 @@ var utils = (function () {
          */
         find_min_cursor: function (activities) {
 
-            let min_cursor = this.get_epoch_in_secs()
+            let min_cursor = this.get_epoch_in_milliseconds()
 
             for (let i = 0; i < activities.length; i++) {
 
@@ -182,7 +190,7 @@ var strava_api = (function (utils) {
 
             var d = jQuery.Deferred();
 
-            console.log(`Fetching feed entries before (${cursor}) - ${new Date(cursor * 1000)}`)
+            console.log(`Fetching feed entries before (${cursor}) - ${new Date(cursor)}`)
             var url = `https://www.strava.com/dashboard/feed?feed_type=following&cursor=${cursor}`;
             jQuery.ajax({
                 method: "GET",
@@ -220,7 +228,7 @@ var app = (function (utils, api) {
         if (count == 0) { return data; }
 
         if (cursor == null) {
-            cursor = utils.get_epoch_in_secs()
+            cursor = utils.get_epoch_in_milliseconds()
         }
 
         return api.list_feed(cursor).then(function (activities) {
@@ -316,7 +324,7 @@ var app = (function (utils, api) {
                 utils.update_progress_ui(`Kudo (${kudo_count}/${kudo_eligible_activity_count})`)
             }
 
-            get_feed_recursive(utils.get_epoch_in_secs(), feed_depth, null, onFeedFetch)
+            get_feed_recursive(utils.get_epoch_in_milliseconds(), feed_depth, null, onFeedFetch)
                 .then(function (activities) {
                     kudo_eligible_activity_count = get_kudo_eligible_activity_count(activities)
 
@@ -356,7 +364,7 @@ var app = (function (utils, api) {
                 var total_seconds = config.AUTO_KUDO_CHECK_SECS - 1
                 ui_timer.start(1, function () {
                     if (!kudo_in_progress) {
-                        var str_time = total_seconds < 3600 ? new Date(total_seconds * 1000).toISOString().substring(14, 19) : new Date(total_seconds * 1000).toISOString().substring(11, 19) 
+                        var str_time = total_seconds < 3600 ? new Date(total_seconds * 1000).toISOString().substring(14, 19) : new Date(total_seconds * 1000).toISOString().substring(11, 19)
                         utils.update_progress_ui(str_time)
                     }
                     total_seconds--
@@ -407,7 +415,7 @@ window.addEventListener('load', (event) => {
     })
 
     btnKudo.click(function () {
-        app.search_feed_and_give_kudos().then(function(){
+        app.search_feed_and_give_kudos().then(function () {
             utils.update_progress_ui("")
         })
     })
