@@ -1,5 +1,29 @@
 #autokudo_item {
     padding-left: 10px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+#autokudo_button {
+    background-color: #fc5200;
+    color: white;
+    align-items: center;
+    border: 1px solid rgba(0, 0, 0, 0);
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    flex-direction: row;
+    font-family: Boathouse, Segoe UI, Helvetica Neue, -apple-system, system-ui, BlinkMacSystemFont, Roboto, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol;
+    font-size: 14px;
+    justify-content: center;
+    min-height: 32px;
+    padding: 6px 10px;
+    touch-action: manipulation;
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+    -webkit-user-select: none;
+    user-select: none;
+    white-space: nowrap;
+    will-change: background-color, border-color, color;
 }
 
 #autokudo_progress_item {

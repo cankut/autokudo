@@ -10,7 +10,7 @@
     "web_accessible_resources": [
         {
             "resources": [
-                "scripts/autokudo.js", "css/autokudo.css"
+                 "scripts/jquery-4.0.0.js", "scripts/autokudo.js", "css/autokudo.css"
             ],
             "matches": ["<all_urls>"]
         }
@@ -23,7 +23,7 @@
         {
             "run_at": "document_start",
             "matches": [
-                "https://www.strava.com/dashboard/*"
+                "https://www.strava.com/dashboard*"
             ],
             "js": [
                 "scripts/content.js"

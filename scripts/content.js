@@ -2,6 +2,10 @@ var s = document.createElement('script');
 s.src = chrome.runtime.getURL('scripts/autokudo.js');
 (document.head || document.documentElement).appendChild(s);
 
+var sJquery = document.createElement('script');
+sJquery.src = chrome.runtime.getURL('scripts/jquery-4.0.0.js');
+(document.head || document.documentElement).appendChild(sJquery);
+
 var link = document.createElement('link');
 link.rel = "stylesheet"
 link.href = chrome.runtime.getURL('css/autokudo.css');

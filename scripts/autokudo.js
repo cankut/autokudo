@@ -399,8 +399,10 @@ var app = (function (utils, api) {
 window.addEventListener('load', (event) => {
     console.log('page loaded.');
 
-    let btnKudo = jQuery(`<li id="autokudo_item" class="nav-item">
-    <span id="autokudo_button" class="experiment btn btn-sm btn-primary">Kudo All!</span>
+    var parentLi = jQuery("#challenges-menu").parent()
+
+    let btnKudo = jQuery(`<li id="autokudo_item" class="${parentLi.attr('class')}">
+    <span id="autokudo_button" class="">Kudo All!</span>
     </li>`)
 
     let progress = jQuery(`<li id="autokudo_progress_item" class="nav-item">
@@ -420,8 +422,9 @@ window.addEventListener('load', (event) => {
         })
     })
 
-    jQuery(".global-nav").append(btnKudo)
-    jQuery(".global-nav").append(progress)
-    jQuery(".global-nav").append(btnUpdateSettings)
+    var navigationContainer = jQuery("#challenges-menu").parent().parent();
+    navigationContainer.append(btnKudo)
+    navigationContainer.append(progress)
+    navigationContainer.append(btnUpdateSettings)
 
 });
