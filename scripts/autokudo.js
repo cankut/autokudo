@@ -165,10 +165,15 @@ var strava_api = (function (utils) {
             var d = jQuery.Deferred();
 
             var url = `https://www.strava.com/feed/activity/${activity.id}/kudo`;
+             var token = document.querySelector('meta[name="csrf"]')?.content;
 
             jQuery.ajax({
                 method: "POST",
                 url: url,
+                headers: {
+                    "X-CSRF-Token": token,
+                    "X-Requested-With": "XMLHttpRequest"
+                },
                 success: function (data) {
                     d.resolve({ activity_id: activity.id, athlete: activity.athlete, name: activity.name });
                 },
